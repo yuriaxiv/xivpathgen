@@ -21,12 +21,49 @@ races_list = [
 ]
 
 part_types = ["Face", "Body", "Eyes", "Brow/Lash"]
-body_types_female = ["Vanilla", "Bibo+", "Gen 3"]
-body_types_male = ["Vanilla", "TBSE", "Vanilla (with TBSE installed)"]
 body_type_mapping = {
     "Vanilla (with TBSE installed)": "VanillaTBSE"
 }
 texture_types = ["Diffuse/Base", "Normal", "Mask"]
+
+race_body_types = {
+    "Female": {
+        "Midlander": ["Vanilla", "Bibo+", "Gen3"],
+        "Highlander": ["Vanilla", "Bibo+", "Gen3"],
+        "Wildwood": ["Vanilla", "Bibo+", "Gen3"],
+        "Duskwight": ["Vanilla", "Bibo+", "Gen3"],
+        "Seeker": ["Vanilla", "Bibo+", "Gen3"],
+        "Keeper": ["Vanilla", "Bibo+", "Gen3"],
+        "Seawolf": ["Vanilla", "Bibo+", "Gen3"],
+        "Hellsguard": ["Vanilla", "Bibo+", "Gen3"],
+        "Plainsfolk": ["Vanilla"],
+        "Dunesfolk": ["Vanilla"],
+        "Raen": ["Vanilla", "Bibo+", "Gen3"],
+        "Xaela": ["Vanilla", "Bibo+", "Gen3"],
+        "Hellions": ["Vanilla", "Bibo+", "Gen3"],
+        "Lost": ["Vanilla", "Bibo+", "Gen3"],
+        "Rava": ["Vanilla", "Bibo+", "Gen3"],
+        "Veena": ["Vanilla", "Bibo+", "Gen3"]
+    },
+    "Male": {
+        "Midlander": ["Vanilla", "TBSE", "Vanilla (with TBSE Installed)"],
+        "Highlander": ["Vanilla", "TBSE", "Vanilla (with TBSE Installed)"],
+        "Wildwood": ["Vanilla", "TBSE", "Vanilla (with TBSE Installed)"],
+        "Duskwight": ["Vanilla", "TBSE", "Vanilla (with TBSE Installed)"],
+        "Seeker": ["Vanilla", "TBSE", "Vanilla (with TBSE Installed)"],
+        "Keeper": ["Vanilla", "TBSE", "Vanilla (with TBSE Installed)"],
+        "Seawolf": ["Vanilla"],
+        "Hellsguard": ["Vanilla"],
+        "Plainsfolk": ["Vanilla"],
+        "Dunesfolk": ["Vanilla"],
+        "Raen": ["Vanilla", "TBSE", "Vanilla (with TBSE Installed)"],
+        "Xaela": ["Vanilla", "TBSE", "Vanilla (with TBSE Installed)"],
+        "Hellions": ["Vanilla"],
+        "Lost": ["Vanilla"],
+        "Rava": ["Vanilla", "TBSE", "Vanilla (with TBSE Installed)"],
+        "Veena": ["Vanilla", "TBSE", "Vanilla (with TBSE Installed)"]
+    }
+}
 
 
 # Load JSON data
@@ -61,10 +98,14 @@ def set_cookie(key, value):
 
 
 # Initialize state from cookies
-st.session_state.gender = get_cookie('gender', "Female")
-st.session_state.race = get_cookie('race', races_list[0])
+default_gender = "Female"
+default_race = races_list[0]
+default_body_type = race_body_types[default_gender][default_race][0]
+
+st.session_state.gender = get_cookie('gender', default_gender)
+st.session_state.race = get_cookie('race', default_race)
 st.session_state.part_type = get_cookie('part_type', part_types[0])
-st.session_state.body_type = get_cookie('body_type', body_types_female[0])
+st.session_state.body_type = get_cookie('body_type', default_body_type)
 st.session_state.face_number = int(get_cookie('face_number', '1'))
 st.session_state.texture_type = get_cookie('texture_type', texture_types[0])
 
@@ -135,13 +176,14 @@ st.title("XIV Texture Path Generator", anchor=False)
 # First row
 col1, col2 = st.columns(2)
 with col1:
-    gender = st.selectbox("Gender", options=["Female", "Male"], index=["Female", "Male"].index(st.session_state.gender))
+    gender = st.selectbox("Gender", options=["Female", "Male"], index=["Female", "Male"].index(st.session_state.gender),
+                          key="gender_select")
     if gender != st.session_state.gender:
         st.session_state.gender = gender
         set_cookie('gender', gender)
 
 with col2:
-    race = st.selectbox("Race", options=races_list, index=races_list.index(st.session_state.race))
+    race = st.selectbox("Race", options=races_list, index=races_list.index(st.session_state.race), key="race_select")
     if race != st.session_state.race:
         st.session_state.race = race
         set_cookie('race', race)
@@ -149,16 +191,19 @@ with col2:
 # Second row
 col3, col4, col5 = st.columns(3)
 with col3:
-    part_type = st.selectbox("Part Type", options=part_types, index=part_types.index(st.session_state.part_type))
+    part_type = st.selectbox("Part Type", options=part_types, index=part_types.index(st.session_state.part_type),
+                             key="part_type_select")
     if part_type != st.session_state.part_type:
         st.session_state.part_type = part_type
         set_cookie('part_type', part_type)
 
 with col4:
     if part_type == "Body":
-        body_types = body_types_female if gender == "Female" else body_types_male
-        body_type = st.selectbox("Body Type", options=body_types, index=body_types.index(
-            st.session_state.body_type) if st.session_state.body_type in body_types else 0)
+        available_body_types = race_body_types[gender][race]
+        body_type = st.selectbox("Body Type", options=available_body_types,
+                                 index=available_body_types.index(
+                                     st.session_state.body_type) if st.session_state.body_type in available_body_types else 0,
+                                 key="body_type_select")
         if body_type != st.session_state.body_type:
             st.session_state.body_type = body_type
             set_cookie('body_type', body_type)
@@ -167,8 +212,10 @@ with col4:
         body_type = None
         if part_type in ["Face", "Eyes", "Brow/Lash"]:
             valid_face_numbers = get_valid_face_numbers(race, gender)
-            face_number = st.selectbox("Face Number", options=valid_face_numbers, index=valid_face_numbers.index(
-                st.session_state.face_number) if st.session_state.face_number in valid_face_numbers else 0)
+            face_number = st.selectbox("Face Number", options=valid_face_numbers,
+                                       index=valid_face_numbers.index(
+                                           st.session_state.face_number) if st.session_state.face_number in valid_face_numbers else 0,
+                                       key="face_number_select")
             if face_number != st.session_state.face_number:
                 st.session_state.face_number = face_number
                 set_cookie('face_number', str(face_number))
@@ -186,7 +233,7 @@ with col5:
 
     # Determine the texture options and display names
     if part_type == "Brow/Lash":
-        texture_options = [t for t in texture_types if t != "Diffuse/Base"]
+        texture_options = ["Mask", "Normal"]  # Changed order here
     else:
         texture_options = texture_types
 
@@ -200,8 +247,10 @@ with col5:
 
     # Get the selected texture type from the dropdown
     selected_display_name = st.selectbox("Texture", options=list(display_names.values()),
-                                         index=list(display_names.values()).index(display_names[
-                                                                                      st.session_state.texture_type]) if st.session_state.texture_type in display_names else 0)
+                                         index=0 if part_type == "Brow/Lash" else
+                                         list(display_names.values()).index(display_names[
+                                                                                st.session_state.texture_type]) if st.session_state.texture_type in display_names else 0,
+                                         key="texture_select")
 
     # Map the selected display name back to the original texture type
     texture_type = reversed_display_names.get(selected_display_name, "Diffuse/Base")
@@ -222,11 +271,11 @@ st.code(generated_path, language="text")
 st.write("Extra Notes: ")
 col1, col2, col3 = st.columns(3)
 with col1:
-    if st.button("For Gen3 body users"):
+    if st.button("For Gen3 body users", key="gen3_button"):
         gen3_dialog()
 with col2:
-    if st.button("Can't find your path?"):
+    if st.button("Can't find your path?", key="path_button"):
         path_dialog()
 with col3:
-    if st.button("Questions and Help"):
+    if st.button("Questions and Help", key="help_button"):
         help_dialog()
