@@ -3,6 +3,17 @@ import os
 
 import streamlit as st
 
+st.markdown(
+    """
+    <style>
+    .stCodeBlock code {
+        font-size: 0.8rem !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 # Data
 races_list = [
     "Midlander", "Highlander", "Wildwood", "Duskwight", "Seeker", "Keeper",
@@ -36,8 +47,22 @@ def load_all_data():
 ALL_DATA = load_all_data()
 
 
+@st.dialog("Gen3")
+def gen3_dialog():
+    st.write(
+        "If the paths are not working, you may need to install the [Universal Compatibility Patch]("
+        "https://www.xivmodarchive.com/modid/113626).")
+
+
+@st.dialog("Path")
+def path_dialog():
+    st.write(
+        "A more complete list of paths can be found [here]("
+        "https://docs.google.com/spreadsheets/d/1eccxWizhEQRdKkMMTB5721aMclo9KpEsfsKXT43iKqQ/).")
+
+
 @st.dialog("Help")
-def show_dialog():
+def help_dialog():
     st.write(
         "If there is an issue with the paths, or you need some help with them, you can ask me in my Discord Server: "
         "https://discord.gg/lunartear")
@@ -145,21 +170,18 @@ with col5:
 generated_path = get_texture_path(gender, race, part_type, body_type, texture_type, face_number)
 
 # Display the generated path
-col1, col2, col3 = st.columns([8, 1, 1])
-with col1:
-    st.subheader("Path:")
-with col3:
-    if st.button("Help"):
-        show_dialog()
-
+st.subheader("Path:")
 st.code(generated_path, language="text")
 
-# Extra notes expander
-with st.expander("For Gen 3 body users"):
-    st.markdown(
-        "If the paths are not working, you may need to install the [Universal Compatibility Patch]("
-        "https://www.xivmodarchive.com/modid/113626).")
-with st.expander("Can't find your path?"):
-    st.markdown(
-        "A more complete list of paths can be found [here]("
-        "https://docs.google.com/spreadsheets/d/1eccxWizhEQRdKkMMTB5721aMclo9KpEsfsKXT43iKqQ/).")
+# Extra notes dialogs
+st.write("Extra Notes: ")
+col1, col2, col3 = st.columns(3)
+with col1:
+    if st.button("For Gen3 body users"):
+        gen3_dialog()
+with col2:
+    if st.button("Can't find your path?"):
+        path_dialog()
+with col3:
+    if st.button("Questions and Help"):
+        help_dialog()
