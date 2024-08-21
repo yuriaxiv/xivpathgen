@@ -8,6 +8,9 @@ st.markdown(
     .stCodeBlock code {
         font-size: 0.8rem !important;
     }
+    [data-testid="column"] {
+        height: 75px !important;
+    }
     </style>
     """,
     unsafe_allow_html=True
